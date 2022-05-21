@@ -1,0 +1,17 @@
+{
+  "name": "shrooms.lol",
+  "version": "1.1.0",
+  "description": "",
+  "author": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack --mode=development",
+    "deploy": "webpack  --mode=production --config webpack.production.config.js",
+    "test": "eslint ./src/**/**.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+  },
+  "dependencies": {
+  }
+}
