@@ -34,6 +34,9 @@ const Constants = {
       },
     },
   },
+  Champions: {
+    TEEMO: 'teemo',
+  },
   Monsters: {
     MELEE: 'melee',
     RANGED: 'ranged',
@@ -43,7 +46,6 @@ const Constants = {
     WOLF_L: 'wolf_l',
     WOLF_S: 'wolf_s',
     KRUG_L: 'krug_l',
-    KRUG_M: 'krug_m',
     KRUG_S: 'krug_s',
     GROMP: 'gromp',
     RED: 'red_sentinel',
@@ -53,10 +55,33 @@ const Constants = {
     D_CLOUD: 'drake_cloud',
     D_MOUNTAIN: 'drake_mountain',
     D_HEXTECH: 'drake_hextech',
+    D_CHEMTECH: 'drake_chemtech',
     D_ELDER: 'drake_elder',
-    RIFT: 'rift_herald',
+    HERALD: 'rift_herald',
     BARON: 'baron_nashor', 
-  },  
+  },
+  Animations: {
+    IDLE: 'idle',
+    MOVE: 'move',
+  },
+  Directions: {
+    U: 'down',
+    D: 'up',
+    L: 'left',
+    R: 'right',
+  },
+  Stats: {
+    AD: 'attack_damage',
+    AS: 'attack_speed',
+    RG: 'attack_range',
+    AP: 'ability_power',
+    AH: 'ability_haste',
+    MS: 'movement_speed',
+    HP: 'hit_points',
+    MR: 'magic_resist',
+    AR: 'armor',
+  },
+  Keycodes: Phaser.Input.Keyboard.KeyCodes,
 };
 
 export default Constants;
