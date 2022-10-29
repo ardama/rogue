@@ -1,5 +1,5 @@
 import Unit from './Unit.js';
-import ChampionData from '../../data/units/ChampionData.js';
+import ChampionData from '../../data/units/champions/ChampionData.js';
 import _ from 'lodash';
 
 
@@ -14,10 +14,4 @@ export default class Champion extends Unit {
 
     super(scene, x, y, unitData);
   };
-  
-  // triggerAttack() {
-  // };
-  // 
-  // triggerSpell() {
-  // };
 }

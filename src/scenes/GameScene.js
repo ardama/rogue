@@ -1,5 +1,6 @@
 import ProceduralMap from '../classes/map/ProceduralMap.js';
 import Champion from '../classes/units/Champion.js';
+import Monster from '../classes/units/Monster.js';
 import D from '../data/GameData.js';
 import C from '../utils/constants.js';
 import { Counter } from '../utils/helpers.js';
@@ -9,7 +10,7 @@ export default class GameScene extends Phaser.Scene {
     super({ key: 'GameScene' });
     
     this.counter = new Counter(1);
-  }
+  };
   
   preload() {
     this.load.image("terrain", "assets/images/terrain.png");
@@ -33,7 +34,7 @@ export default class GameScene extends Phaser.Scene {
     // });
 
     this.physics.world.enable(this);
-  }
+  };
   
   // CREATE FUNCTIONS
   create() {
@@ -50,6 +51,7 @@ export default class GameScene extends Phaser.Scene {
     this._initGroups();
     this._initMap();
     this._initChampion();
+    this._initStage();
     // this.initStructures();
     // this.initEnemies();
     // this.initInterface();
@@ -60,7 +62,7 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, D.Map.tileW * D.Map.tilesize, D.Map.tileH * D.Map.tilesize);
     this.cameras.main.setZoom(3);
     this.cameras.main.startFollow(this.champion);
-  }
+  };
   
   
   // INITIALIZATION FUNCTIONS
@@ -81,6 +83,11 @@ export default class GameScene extends Phaser.Scene {
   _initChampion = () => {
     this.champion = new Champion(this, 100, 100, C.Champions.TEEMO);
     this.champion.renderToScene();
+  };
+  
+  _initStage = () => {
+    this.monster = new Monster(this, 200, 200, C.Monsters.SCUTTLE);
+    this.monster.renderToScene();
   };
   
   _initInputs = () => {
@@ -122,33 +129,33 @@ export default class GameScene extends Phaser.Scene {
     });
     
     this.keys[C.Keycodes.Q].on('down', () => {
-      this.champion.triggerSpell(0);
+      this._triggerChampionSpell(0)
     });
     this.keys[C.Keycodes.U].on('down', () => {
-      this.champion.triggerSpell(0);
+      this._triggerChampionSpell(0)
     });
     
     this.keys[C.Keycodes.W].on('down', () => {
-      this.champion.triggerSpell(1);
+      this._triggerChampionSpell(1)
     });
     this.keys[C.Keycodes.I].on('down', () => {
-      this.champion.triggerSpell(1);
+      this._triggerChampionSpell(1)
     });
     
     this.keys[C.Keycodes.E].on('down', () => {
-      this.champion.triggerSpell(2);
+      this._triggerChampionSpell(2)
     });
     this.keys[C.Keycodes.O].on('down', () => {
-      this.champion.triggerSpell(2);
+      this._triggerChampionSpell(2)
     });
     
     this.keys[C.Keycodes.R].on('down', () => {
-      this.champion.triggerSpell(3);
+      this._triggerChampionSpell(3)
     });
     this.keys[C.Keycodes.P].on('down', () => {
-      this.champion.triggerSpell(3);
+      this._triggerChampionSpell(3)
     });
-  }
+  };
   
   // UPDATE FUNCTIONS
   update(time, delta) {
@@ -156,15 +163,20 @@ export default class GameScene extends Phaser.Scene {
     
     this._updateMap(time, delta);
     this._updateChampion(time, delta);
+    this._updateStage(time, delta);
   }
   
   _updateMap = (time, delta) => {
     this.map.update(time, delta);
-  }
+  };
   
   _updateChampion = (time, delta) => {
     this.champion.update(time, delta);
-  }
+  };
+  
+  _updateStage = (time, delta) => {
+    this.monster.update(time, delta);
+  };
 
   // PUBLIC FUNCTIONS
   registerAnimations(animations) {
@@ -177,5 +189,20 @@ export default class GameScene extends Phaser.Scene {
         repeatDelay: animation.repeatDelay || 0,        
       })
     })
-  }
+  };
+  
+  
+  // PRIVATE FUNCTIONS
+  _getPointerLocation = () => {
+    const pointer = this.input.activePointer;
+    return this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+  };
+  
+  _triggerChampionSpell = (index) => {
+    const destination = this._getPointerLocation();
+    // TODO: get current target based on mouse over
+    const target = null;
+    
+    this.champion.triggerSpell(index, destination, target);
+  };
 }

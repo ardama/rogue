@@ -1,5 +1,9 @@
+import _ from 'lodash';
+import SpellInstance from './SpellInstance.js';
+
 const baseSpellData = {
   name: 'Unnamed spell',
+  class: SpellInstance,
   stats: {
     base: {
       charges: -1,
@@ -13,28 +17,30 @@ const baseSpellData = {
 export default class Spell {
   constructor(unit, spellData) {
     this.unit = unit;
+    this.scene = this.unit.scene;
     
-    this.data = _.merge({}, baseSpellData, spellData);
+    this.gamedata = _.merge({}, baseSpellData, spellData);
     this._initState();
+    this._initInstances();
   };
   
   _initState = () => {
     this.state = {};
     this.queuedState = this._getInitialState();
-    this.pushState();
+    this._pushState();
   };
   
   _getInitialState = () => {
-    const { charges, chargeTime, cooldownTime } = this.data.stats.base;
+    const { charges, chargeTime, cooldownTime } = this.gamedata.stats.base;
     return {
       level: 1,
       charges: charges,
       chargeTime: chargeTime === -1 ? -1 : 0,
       cooldownTime: cooldownTime === -1 ? -1 : 0,
     };
-  }
+  };
   
-  pushState() {
+  _pushState = () => {
     const shouldUpdateStats = this._shouldUpdateStats();
     
     this.state = this.queuedState;
@@ -42,13 +48,18 @@ export default class Spell {
     
     if (shouldUpdateStats) this._updateStats();
   };
+  
+  _initInstances = () => {
+    this.instances = {};
+  };
 
   update(time, delta) {
     this._updateCooldown(delta);
     this._updateCharges(delta);
+    this._updateInstances(time, delta);
     
-    this.pushState();
-  }
+    this._pushState();
+  };
   
   _updateCooldown = (delta) => {
     if (this.queuedState.cooldownTime > 0) {
@@ -64,7 +75,7 @@ export default class Spell {
       if (this.queuedState.chargeTime <= 0) {
         // grant another charge if time remaining has expired
         this.queuedState.charges += 1;
-        console.log(`Charge granted for ${this.data.name} (${this.queuedState.charges})`);
+        console.log(`Charge granted for ${this.gamedata.name} (${this.queuedState.charges})`);
         
         // restart the timer unless we're at max charges
         if (this.queuedState.charges === this.stats.charges) {
@@ -76,7 +87,13 @@ export default class Spell {
     }
   }
   
-  fire() {
+  _updateInstances = (time, delta) => {
+    Object.values(this.instances).forEach((instance) => {
+      instance.update(time, delta);
+    });
+  };
+  
+  fire(origin, destination, target) {
     if (this.queuedState.charges > 0) {
       // expend a charge
       this.queuedState.charges -= 1;
@@ -88,8 +105,10 @@ export default class Spell {
       if (this.queuedState.chargeTime === 0) {
         this.queuedState.chargeTime = this.stats.chargeTime;
       }
+      
+      this._fireInstance(origin, destination, target);
     }
-    console.log(`${this.data.name} cast (${this.queuedState.charges})`);
+    console.log(`${this.gamedata.name} cast (${this.queuedState.charges})`);
   };
   
   isReady() {
@@ -98,6 +117,22 @@ export default class Spell {
 
     return true;
   }
+  
+  _fireInstance = (origin, destination, target) => {
+    const stats = _.cloneDeep(this.stats);
+    const instance = this._createSpellInstance(stats, origin, destination, target);
+
+    instance.fire();
+    this.instances[instance.id] = instance;
+  };
+
+  _createSpellInstance = (stats, origin, destination, target) => {
+    return new SpellInstance(this, origin, destination, target);
+  }
+  
+  setInstanceComplete(instanceId) {
+    delete this.instances[instanceId];
+  };
   
   _shouldUpdateStats = () => {
     if (this.state.level !== this.queuedState.level) return true;
@@ -111,17 +146,17 @@ export default class Spell {
   _computeStats = () => {
     const nextStats = {};
     
-    const { base: baseStats } = this.data.stats;
+    const { base: baseStats } = this.gamedata.stats;
     Object.keys(baseStats).forEach((stat) => {
       nextStats[stat] = this._computeStat(stat);
     });
     
-    console.log(`Updated ${this.data.name} stats:`, nextStats);
+    console.log(`Updated ${this.gamedata.name} stats:`, nextStats);
     return nextStats;
   };
   
   _computeStat = (stat) => {
-    const { base, scaling } = this.data.stats;
+    const { base, scaling } = this.gamedata.stats;
     const { modifiers = {}, level = 1 } = this.state;
     
     const baseStat = base[stat] || 0;

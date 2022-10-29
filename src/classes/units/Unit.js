@@ -16,11 +16,11 @@ const baseUnitData = {
 export default class Unit extends Phaser.GameObjects.Sprite {
   constructor(scene, x, y, unitData) {
     const data = _.merge({}, baseUnitData, unitData);
-    scene.registerAnimations(unitData.appearance.animations);
+    scene.registerAnimations(data.appearance.animations);
     
     super(scene, x, y, data.appearance.key);
   
-    this.data = data;
+    this.gamedata = data;
     this._initState();
     this._initAttack();
     this._initSpells();
@@ -29,7 +29,7 @@ export default class Unit extends Phaser.GameObjects.Sprite {
   _initState = () => {
     this.state = {};
     this.queuedState = this._getInitialState();
-    this.pushState();
+    this._pushState();
   };
   
   _getInitialState = () => {
@@ -42,17 +42,26 @@ export default class Unit extends Phaser.GameObjects.Sprite {
       modifiers: {},
       level: 1,
     }
-  }
+  };
+  
+  _pushState = () => {
+    const shouldUpdateStats = this._shouldUpdateStats();
+    
+    this.state = this.queuedState;
+    this.queuedState = _.cloneDeep(this.state);
+    
+    if (shouldUpdateStats) this._updateStats();
+  };
   
   _initAttack = () => {
-    const AttackClass = this.data.attack;
+    const AttackClass = this.gamedata.attack;
     this.attack = new AttackClass(this);
   };
   
   _initSpells = () => {
     this.spells = [];
     
-    (this.data.spells || []).forEach((SpellClass) => {
+    (this.gamedata.spells || []).forEach((SpellClass) => {
       this.spells.push(new SpellClass(this));
     });
   };
@@ -65,7 +74,7 @@ export default class Unit extends Phaser.GameObjects.Sprite {
     
     
     
-    this.pushState();
+    this._pushState();
   };
   
   _updateMovement = (time, delta) => {
@@ -135,17 +144,17 @@ export default class Unit extends Phaser.GameObjects.Sprite {
   _computeStats = () => {
     const nextStats = {};
     
-    const { base: baseStats } = this.data.stats;
+    const { base: baseStats } = (this.gamedata.stats || {});
     Object.keys(baseStats).forEach((stat) => {
       nextStats[stat] = this._computeStat(stat);
     });
     
-    console.log(`Updated ${this.data.name} stats:`, nextStats);
+    console.log(`Updated ${this.gamedata.name} stats:`, nextStats);
     return nextStats;
   };
   
   _computeStat = (stat) => {
-    const { base, scaling } = this.data.stats;
+    const { base = {}, scaling = {} } = this.gamedata.stats;
     const { modifiers = {}, level = 1 } = this.state;
     
     const baseStat = base[stat] || 0;
@@ -158,15 +167,6 @@ export default class Unit extends Phaser.GameObjects.Sprite {
     value += flat;
     value *= (1 + percent);
     return value;
-  }
-  
-  pushState() {
-    const shouldUpdateStats = this._shouldUpdateStats();
-    
-    this.state = this.queuedState;
-    this.queuedState = _.cloneDeep(this.state);
-    
-    if (shouldUpdateStats) this._updateStats();
   };
   
   renderToScene() {
@@ -175,9 +175,10 @@ export default class Unit extends Phaser.GameObjects.Sprite {
     this.scene.add.existing(this);
     this.scene.physics.add.existing(this);
     
-    
     this._initAnimation();
     this._initHitbox();
+
+    this.queuedState.rendered = true;
   };
   
   
@@ -186,7 +187,7 @@ export default class Unit extends Phaser.GameObjects.Sprite {
   };
   
   _renderAnimation = (animation, direction, repeat = -1) => {
-    const { name } = this.data;
+    const { name } = this.gamedata;
     const animationKey = `${name}_${animation}_${direction}`;
     
     if (animationKey && animationKey !== this.queuedState.appearance.animation) {
@@ -199,10 +200,10 @@ export default class Unit extends Phaser.GameObjects.Sprite {
   
 
   _initHitbox = () => {
-    const { hitbox = 10 } = this.data.stats.static;
+    const { hitbox: { h = 0, w = 0, shape = 'circle' } } = this.gamedata.stats.static;
     this.body.setCollideWorldBounds(true);
-    this.body.isCircle = true;
-    this.body.setSize(hitbox, hitbox, false);
+    this.body.isCircle = shape === 'circle';
+    this.body.setSize(w, h, false);
     // this.body.setOffset((16 - this.hitboxW) / 2, 4 + (16 - this.hitboxH) / 2);
   };
   
@@ -214,10 +215,10 @@ export default class Unit extends Phaser.GameObjects.Sprite {
     
   };
   
-  triggerSpell(index) {
+  triggerSpell(index, destination, target) {
     const spell = this.spells[index];
     if (this._canPerformSpell(spell)) {
-      this._performSpell(spell);
+      this._performSpell(spell, destination, target);
     }
     
     // TODO: create spell queue
@@ -234,8 +235,9 @@ export default class Unit extends Phaser.GameObjects.Sprite {
     return true;
   }
   
-  _performSpell = (spell) => {
-    spell.fire();
+  _performSpell = (spell, destination, target) => {
+    const origin = this.getHitboxCenter();
+    spell.fire(origin, destination, target);
   };
   
   triggerMove(destination) {
@@ -276,17 +278,17 @@ export default class Unit extends Phaser.GameObjects.Sprite {
   
 
   getHitboxCenter() {
-    const { hitbox = 100 } = this.data.stats.static;
+    const { hitbox: { w = 0, h = 0 } } = this.gamedata.stats.static;
     return {
-      x: this.body.x + hitbox / 2,
-      y: this.body.y + hitbox / 2,
+      x: this.body.x + w / 2,
+      y: this.body.y + h / 2,
     };
   };
   
   _setTarget = (target, radius) => {
     // TODO: if within radius, clear destination
     //       otherwise, set destination to closest point within that distance of the target
-    const destination = target.getHitboxCenter;
+    const destination = target.getHitboxCenter();
     this._setDestination(destination);
 
     this.queuedState.physics.target = target;

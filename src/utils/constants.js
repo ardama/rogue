@@ -38,6 +38,7 @@ const Constants = {
     TEEMO: 'teemo',
   },
   Monsters: {
+    SCUTTLE: 'scuttle',
     MELEE: 'melee',
     RANGED: 'ranged',
     CANNON: 'cannon',
@@ -73,7 +74,7 @@ const Constants = {
   Stats: {
     AD: 'attack_damage',
     AS: 'attack_speed',
-    RG: 'attack_range',
+    RG: 'range',
     AP: 'ability_power',
     AH: 'ability_haste',
     MS: 'movement_speed',

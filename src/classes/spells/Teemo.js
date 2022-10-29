@@ -1,7 +1,12 @@
 import Spell from './Spell.js';
+import SpellInstance from './SpellInstance.js';
+import Projectile from '../objects/Projectile.js';
+
+import TeemoData from '../../data/units/champions/TeemoData';
 
 const BlindingDartData = {
   name: 'BlindingDart',
+  class: BlindingDartInstance,
   stats: {
     base: {
       charges: 1,
@@ -10,18 +15,36 @@ const BlindingDartData = {
     },
   },
 };
+export class BlindingDartInstance extends SpellInstance {
+  constructor(spell, stats, origin, destination, target) {
+    super(spell, stats, origin, destination, target);
+  };
+  
+  fire() {
+    const onArrival = (projectile) => {
+      delete this.objects[projectile.id];
+    }
+    
+    const projectile = new Projectile(this.scene, this.origin.x, this.origin.y);
+    projectile.renderToScene();
+    projectile.triggerMove(this.destination);
+
+    this.objects[projectile.id] = projectile;
+  };
+};
 export class BlindingDart extends Spell {
   constructor(unit) {
     super(unit, BlindingDartData);
-  }
+  };
   
-  fire() {
-    super.fire();
-  }
+  _createSpellInstance = (stats, origin, destination, target) => {
+    return new BlindingDartInstance(this, stats, origin, destination, target);
+  };
 };
 
 const MoveQuickData = {
   name: 'MoveQuick',
+  class: MoveQuickInstance,
   stats: {
     base: {
       charges: 3,
@@ -30,18 +53,24 @@ const MoveQuickData = {
     },
   },
 };
+export class MoveQuickInstance extends SpellInstance {
+  constructor(spell, stats, origin, destination, target) {
+    super(spell, stats, origin, destination, target);
+  };
+};
 export class MoveQuick extends Spell {
   constructor(unit) {
     super(unit, MoveQuickData);
   }
   
-  fire() {
-    super.fire();
-  }
+  _createSpellInstance = (stats, origin, destination, target) => {
+    return new MoveQuickInstance(this, stats, origin, destination, target);
+  };
 };
 
 const PoisonShotData = {
   name: 'PoisonShot',
+  class: PoisonShotInstance,
   stats: {
     base: {
       charges: -1,
@@ -49,19 +78,25 @@ const PoisonShotData = {
       cooldownTime: -1,
     },
   },
+};
+export class PoisonShotInstance extends SpellInstance {
+  constructor(spell, stats, origin, destination, target) {
+    super(spell, stats, origin, destination, target);
+  };
 };
 export class PoisonShot extends Spell {
   constructor(unit) {
     super(unit, PoisonShotData);
   }
   
-  fire() {
-    super.fire();
-  }
+  _createSpellInstance = (stats, origin, destination, target) => {
+    return new PoisonShotInstance(this, stats, origin, destination, target);
+  };
 };
 
 const NoxiousTrapData = {
   name: 'NoxiousTrap',
+  class: NoxiousTrapInstance,
   stats: {
     base: {
       charges: -1,
@@ -70,12 +105,17 @@ const NoxiousTrapData = {
     },
   },
 };
+export class NoxiousTrapInstance extends SpellInstance {
+  constructor(spell, stats, origin, destination, target) {
+    super(spell, stats, origin, destination, target);
+  };
+};
 export class NoxiousTrap extends Spell {
   constructor(unit) {
     super(unit, NoxiousTrapData);
   }
   
-  fire() {
-    super.fire();
-  }
+  _createSpellInstance = (stats, origin, destination, target) => {
+    return new NoxiousTrapInstance(this, stats, origin, destination, target);
+  };
 };
