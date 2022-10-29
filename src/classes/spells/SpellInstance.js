@@ -75,6 +75,6 @@ export default class SpellInstance {
   };
   
   _clean = () => {    
-    this.spell.setInstanceComplete(this.id);
+    this.spell.onInstanceComplete(this);
   };
 };

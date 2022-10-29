@@ -130,8 +130,8 @@ export default class Spell {
     return new SpellInstance(this, origin, destination, target);
   }
   
-  setInstanceComplete(instanceId) {
-    delete this.instances[instanceId];
+  onInstanceComplete(instance) {
+    delete this.instances[instance.id];
   };
   
   _shouldUpdateStats = () => {
